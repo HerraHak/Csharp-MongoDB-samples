@@ -3,11 +3,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace mongoRepoTest
 {
-    public class MongoRepository<T> where T:AuditEntity
+    public class MongoRepository<T> where T:AuditEntity, new()
     {
         private IMongoCollection<T> Collection;
         public MongoRepository()
@@ -34,6 +35,21 @@ namespace mongoRepoTest
         public async Task BulkDelete(IEnumerable<Guid> ids)
         {
             await Collection.DeleteManyAsync(e=>ids.Contains(e.Id));
+        }
+
+        public async Task<T> GetById(Guid id)
+        {
+            return (await Collection.FindAsync(e => e.Id == id)).FirstOrDefault();
+        }
+
+        public async Task<IEnumerable<T>> Find(Expression<Func<T, bool>> condition)
+        {
+            return await (await Collection.FindAsync(condition)).ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> GetAll()
+        {
+            return await (await Collection.FindAsync(FilterDefinition<T>.Empty)).ToListAsync();
         }
 
     }

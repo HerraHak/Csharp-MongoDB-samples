@@ -7,15 +7,21 @@ namespace mongoRepoTest
     {
         static void Main(string[] args)
         {
-            var url = new MongoUrl("mongodb://localhost:27017");
-            var client = new MongoClient(url);
-            var database = client.GetDatabase("local");
-            var collection = database.GetCollection<TestObject>("Collection1");
+            var repo = new MongoRepository<TestObject>();
             var document = new TestObject { Id = Guid.NewGuid(), Name = "McGyver", FirstName = "Angus1" };
-            collection.InsertOne(document);
+            repo.Insert(document).GetAwaiter().GetResult();
 
-            var firstdocument = collection.Find(d => d.FirstName == "Angus1").FirstOrDefault();
-            Console.WriteLine(firstdocument?.Name);
+            var firstdocument = repo.Find(d => d.FirstName.Contains("Angus")).GetAwaiter().GetResult();
+            foreach(var doc in firstdocument)
+            {
+                Console.WriteLine(doc.Name);
+            }
+
+            var alldocs = repo.GetAll().GetAwaiter().GetResult();
+            foreach(var doc in alldocs)
+            {
+                Console.WriteLine($"{doc.Name}, {doc.FirstName}, {doc.Id}");
+            }
         }
     }
 }
